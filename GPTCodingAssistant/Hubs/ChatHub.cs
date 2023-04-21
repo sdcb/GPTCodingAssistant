@@ -5,9 +5,9 @@ namespace GPTCodingAssistant.Hubs
 {
     public class ChatHub : Hub
     {
-        public async IAsyncEnumerable<char> Chat(ChatMessage[] chatMessages)
+        public async IAsyncEnumerable<char> Chat()
         {
-            string response = $"Hello World: {chatMessages.Length}";
+            string response = $"Hello World";
             foreach (char c in response)
             {
                 yield return c;

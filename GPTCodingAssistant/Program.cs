@@ -1,3 +1,5 @@
+using GPTCodingAssistant.Hubs;
+
 namespace GPTCodingAssistant
 {
     public class Program
@@ -9,6 +11,10 @@ namespace GPTCodingAssistant
             // Add services to the container.
 
             builder.Services.AddControllersWithViews();
+            builder.Services.AddSignalR(x =>
+            {
+                x.EnableDetailedErrors = true;
+            });
 
             var app = builder.Build();
 
@@ -20,13 +26,12 @@ namespace GPTCodingAssistant
             app.UseStaticFiles();
             app.UseRouting();
 
-
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller}/{action=Index}/{id?}");
 
+            app.MapHub<ChatHub>("/chatHub");
             app.MapFallbackToFile("index.html");
-
             app.Run();
         }
     }

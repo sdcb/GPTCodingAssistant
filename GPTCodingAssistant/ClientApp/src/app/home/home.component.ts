@@ -1,4 +1,5 @@
-import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, Inject, ViewChild } from '@angular/core';
+import { HubConnection, HubConnectionBuilder, IStreamSubscriber } from '@microsoft/signalr';
 
 @Component({
   selector: 'app-home',
@@ -29,8 +30,13 @@ import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';
 export class HomeComponent {
   userInput = '';
   inputPlaceholder = '输入您的消息, 可按Enter发送, Shift+Enter换行…';
-  chatHistory = <ChatMessage[]>[1,2,3,4,5,6,7,8,9,10,11,12,13,14].map(x => new ChatMessage('system', `这是系统消息 ${x}`));
-  api = new Api();
+  chatHistory = <ChatMessage[]>[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map(x => new ChatMessage('system', `这是系统消息 ${x}`));
+  api: IApi;
+
+  constructor(@Inject('BASE_URL') baseUrl: string) {
+    console.log(baseUrl);
+    this.api = new RealApi(baseUrl);
+  }
 
   @ViewChild('uiChatList', { static: true }) uiChatList!: ElementRef<HTMLUListElement>;
 
@@ -43,23 +49,98 @@ export class HomeComponent {
     this.chatHistory = [...this.chatHistory, new ChatMessage('user', this.userInput)];
     const resp = new ChatMessage('assistant', '');
     this.chatHistory = [...this.chatHistory, resp];
-    setTimeout(() => {
-      this.uiChatList.nativeElement.scrollTop = this.uiChatList.nativeElement.scrollHeight;
-    }, 0);
-    
+
+    this.scrollToBottom();
     for await (const c of this.api.chat(this.userInput)) {
       resp.content += c;
+      if (c == '\n' || c == '\r') {
+        this.scrollToBottom();
+      }
     }
     this.userInput = '';
   }
+
+  scrollToBottom() {
+    setTimeout(() => {
+      this.uiChatList.nativeElement.scrollTop = this.uiChatList.nativeElement.scrollHeight;
+    }, 1);
+  }
 }
 
-export class Api {
+export interface IApi {
+  chat(input: string): AsyncGenerator<string>;
+}
+
+export class FakeApi implements IApi {
   public async* chat(input: string) {
     const response = `Hello, ${input}!`;
     for (const c of response) {
       yield c;
       await delay(10);
+    }
+  }
+}
+
+export class RealApi implements IApi {
+  connection: HubConnection;
+
+  constructor(baseUrl: string) {
+    this.connection = new HubConnectionBuilder()
+      .withUrl(`/chatHub`)
+      .build();
+    this.connection.start();
+  }
+
+  async *chat(input: string): AsyncGenerator<string, any, unknown> {
+
+
+    let pushValue: (value: string) => void;
+    let pushError: (error: any) => void;
+    let pushEnd: () => void;
+
+    let streamPromise = new Promise<string>((resolve, reject) => {
+      pushValue = resolve;
+      pushError = reject;
+    });
+    const endPromise = new Promise<void>((resolve) => {
+      pushEnd = resolve;
+    });
+
+    const observer: IStreamSubscriber<string> = {
+      next(value: string) {
+        pushValue(value);
+      },
+      error(err: any) {
+        pushError(err);
+      },
+      complete() {
+        pushEnd();
+      },
+    };
+
+    const subscription = this.connection.stream('Chat').subscribe(observer);
+
+    try {
+      while (true) {
+        const nextPromise = streamPromise.then(
+          (value) => ({ value, done: false }),
+          (err) => { throw err; }
+        );
+        const { value, done } = await Promise.race([nextPromise, endPromise.then(() => ({ value: '', done: true }))]);
+
+        if (done) {
+          break;
+        }
+
+        yield value;
+
+        streamPromise = new Promise<string>((resolve, reject) => {
+          pushValue = resolve;
+          pushError = reject;
+        });
+      }
+    } finally {
+      subscription.dispose();
     }
   }
 }
