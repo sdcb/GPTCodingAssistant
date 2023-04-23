@@ -28,7 +28,7 @@ import { LeftNavMenuComponent } from './left-nav-menu/left-nav-menu.component';
     FormsModule,
     RouterModule.forRoot([
       { path: '', component: SessionComponent, pathMatch: 'full' },
-      { path: 'chat/{sessionId}', component: ChatComponent },
+      { path: 'chat/:sessionId', component: ChatComponent },
       { path: 'counter', component: CounterComponent },
       { path: 'fetch-data', component: FetchDataComponent },
     ])

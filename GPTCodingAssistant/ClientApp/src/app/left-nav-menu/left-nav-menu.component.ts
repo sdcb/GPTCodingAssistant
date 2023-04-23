@@ -10,8 +10,10 @@ import { SessionApiService, SessionSimpleResponse } from '../services/session-ap
     </a>
     <hr>
     <ul class="nav nav-pills flex-fill flex-column mb-auto">
-      <li class="nav-item" *ngFor="let session of sessions; let i = index">
-         <a class="d-flex flex-column flex-shrink-0 nav-link" href="javascript:void(0)" [ngClass]="i === activeSessionId ? 'active' : ''" aria-current="page" (click)="selectSessionId(i)">
+      <li class="nav-item" *ngFor="let session of sessions; let i = index" 
+          [routerLinkActive]="['link-active']"
+          [routerLinkActiveOptions]="{ exact: true }">
+         <a class="d-flex flex-column flex-shrink-0 nav-link" [routerLink]="['/chat/' + i]" [ngClass]="i === activeSessionId ? 'active' : ''" aria-current="page" (click)="selectSessionId(i)">
               <div class="d-flex w-100 justify-content-between">
                 <div class="flex-grow-1">{{session.title}}</div>
                 <div style="color: red" (click)="deleteSession(i); $event.stopPropagation()">×</div>

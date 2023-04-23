@@ -1,6 +1,7 @@
 import { Component, ElementRef, HostListener, Inject, OnInit, ViewChild } from '@angular/core';
 import { ChatApiService } from '../services/chat-api.service';
 import { ChatMessage, SessionApiService } from '../services/session-api.service';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-home',
@@ -52,11 +53,14 @@ export class ChatComponent implements OnInit {
   userInput = '';
   inputPlaceholder = '输入您的消息, 可按Enter发送, Shift+Enter换行…';
   chatHistory = <ChatMessage[]>[];
+  sessionId: number = -1;
 
-  constructor(private chatApi: ChatApiService, private sessionApi: SessionApiService) {
+  constructor(private chatApi: ChatApiService, private sessionApi: SessionApiService, private route: ActivatedRoute) {
   }
+
   ngOnInit(): void {
     this.sessionApi.getSessions().then(sessions => console.log(sessions));
+    this.sessionId = parseInt(this.route.snapshot.paramMap.get('sessionId')!);
   }
 
   @ViewChild('uiChatList', { static: true }) uiChatList!: ElementRef<HTMLUListElement>;
