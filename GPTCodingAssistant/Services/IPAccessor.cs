@@ -2,9 +2,9 @@
 {
     public class IPAccessor
     {
-        private readonly HttpContextAccessor _httpContextAccessor;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public IPAccessor(HttpContextAccessor httpContextAccessor)
+        public IPAccessor(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
         }

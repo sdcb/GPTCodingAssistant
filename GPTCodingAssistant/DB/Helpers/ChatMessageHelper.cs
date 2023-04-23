@@ -4,7 +4,7 @@ namespace GPTCodingAssistant.DB.Helpers;
 
 public static class ChatMessageHelper
 {
-    public static int ToDB(this ChatMessageRole role)
+    public static byte ToDB(this ChatMessageRole role)
     {
 #pragma warning disable CS8846 // switch 表达式不会处理属于其输入类型的所有可能值(它并非详尽无遗)。
         return role switch

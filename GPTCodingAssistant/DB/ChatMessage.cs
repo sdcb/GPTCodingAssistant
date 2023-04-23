@@ -15,7 +15,7 @@ public partial class ChatMessage
 
     public int SessionId { get; set; }
 
-    public int Role { get; set; }
+    public byte Role { get; set; }
 
     public DateTime CreateTime { get; set; }
 

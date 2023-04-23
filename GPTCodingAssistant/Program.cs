@@ -1,5 +1,7 @@
+using GPTCodingAssistant.DB;
 using GPTCodingAssistant.Hubs;
 using GPTCodingAssistant.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace GPTCodingAssistant
 {
@@ -17,6 +19,12 @@ namespace GPTCodingAssistant
                 x.EnableDetailedErrors = true;
             });
             builder.Services.AddSingleton<IPAccessor>();
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddDbContext<ChatGPTDB>(x =>
+            {
+                x.UseSqlServer(builder.Configuration["ChatGPTSqlServerConnectionString"]);
+            });
+            builder.Services.AddScoped<ChatGPTRepository>();
 
             var app = builder.Build();
 
