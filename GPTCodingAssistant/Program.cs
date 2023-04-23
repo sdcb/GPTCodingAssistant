@@ -1,4 +1,5 @@
 using GPTCodingAssistant.Hubs;
+using GPTCodingAssistant.Services;
 
 namespace GPTCodingAssistant
 {
@@ -15,6 +16,7 @@ namespace GPTCodingAssistant
             {
                 x.EnableDetailedErrors = true;
             });
+            builder.Services.AddSingleton<IPAccessor>();
 
             var app = builder.Build();
 

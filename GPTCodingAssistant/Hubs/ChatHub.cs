@@ -3,6 +3,9 @@ using GPTCodingAssistant.DB;
 using Microsoft.AspNetCore.SignalR;
 using OpenAI_API;
 using OpenAI_API.Chat;
+using GPTCodingAssistant.DB.Helpers;
+using Microsoft.EntityFrameworkCore;
+using AI = OpenAI_API.Chat;
 
 namespace GPTCodingAssistant.Hubs
 {
@@ -17,19 +20,31 @@ namespace GPTCodingAssistant.Hubs
         private readonly IConfiguration _config;
         private readonly ChatGPTDB _db;
 
-        public async IAsyncEnumerable<string> Chat(string input)
+        public async IAsyncEnumerable<string> Chat(int sessionId, string input)
         {
             OpenAIAPI api = OpenAIAPI.ForAzure(_config["AzureAI:ResourceName"], _config["AzureAI:DeploymentId"], _config["AzureAI:ApiKey"]);
             api.ApiVersion = "2023-03-15-preview";
             Conversation chat = api.Chat.CreateConversation();
-            _db.ChatMessages.Add(new DB.ChatMessage
+
+            Session session = _db.Sessions
+                .Include(x => x.ChatMessages)
+                .Include(x => x.Ip)
+                .Single(x => x.Id == sessionId);
+            if (session.Ip.Ip1 != Context.GetHttpContext()?.Connection.RemoteIpAddress?.ToString())
             {
+                throw new InvalidOperationException("Session IP not match");
+            }
+
+            session.ChatMessages.Add(new DB.ChatMessage
+            {
+                SessionId = sessionId,
                 CreateTime = DateTime.Now,
                 Message = input,
-                Role = (int)ChatMessageRole.User,
+                Role = ChatMessageRole.User.ToDB(),
             });
-            _db.CreateUserMessage(input);
-            foreach (ChatMessage msg in _db.Messages)
+            _db.SaveChanges();
+
+            foreach (AI.ChatMessage msg in session.ChatMessages.Select(ChatMessageHelper.ToAI))
             {
                 chat.AppendMessage(msg);
             }
@@ -39,7 +54,16 @@ namespace GPTCodingAssistant.Hubs
                 yield return c;
             }
             chat.Messages[^1].Role = ChatMessageRole.Assistant;
-            _db.CreateAssistantMessage(chat.Messages[^1].Content);
+
+            // insert last message
+            session.ChatMessages.Add(new DB.ChatMessage
+            {
+                SessionId = sessionId,
+                CreateTime = DateTime.Now,
+                Message = chat.Messages[^1].Content,
+                Role = ChatMessageRole.Assistant.ToDB(),
+            });
+            _db.SaveChanges();
         }
     }
 }
