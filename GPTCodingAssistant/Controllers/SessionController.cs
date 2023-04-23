@@ -9,7 +9,6 @@ using OpenAI_API.Chat;
 namespace GPTCodingAssistant.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
     public class SessionController : ControllerBase
     {
         private readonly ChatGPTRepository _db;
