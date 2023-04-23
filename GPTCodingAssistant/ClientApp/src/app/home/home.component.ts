@@ -8,6 +8,7 @@ import { ChatMessage, RealApi } from './RealApi';
   max-height: calc(100vh - 150px); /* 你可以根据需要自定义高度 */
   overflow-y: auto;
   margin-bottom: 10px; /* 为了避免与输入区域重叠，你可以添加一些底部外边距 */
+  padding-inline-start: 0;
 }
 .chat .resp {
   white-space: pre-wrap;
@@ -20,6 +21,7 @@ import { ChatMessage, RealApi } from './RealApi';
 .chat li.user {
   text-align: right;
   background-color: #e6f3ff;
+  display: block;
 }
 
 .chat li.assistant {
@@ -29,17 +31,19 @@ import { ChatMessage, RealApi } from './RealApi';
   template: `
 <ul class="chat" #uiChatList>
   <li *ngFor="let chatItem of chatHistory" [ngClass]="chatItem.role">
-    <strong>{{chatItem.role}}</strong>: <pre class="resp">{{chatItem.content}}</pre>
+    <strong>{{chatItem.role}}: </strong><pre class="resp">{{chatItem.content}}</pre>
   </li>
 </ul>
-<div class="container-fluid fixed-bottom input-group mb-3">
-  <textarea type="text" class="form-control" [placeholder]="inputPlaceholder" [ariaLabel]="inputPlaceholder" aria-describedby="basic-addon2" [(ngModel)]="userInput"></textarea>
-  <button (click)="send()" class="btn btn-outline-secondary" type="button">
-    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-1" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
-      <line x1="22" y1="2" x2="11" y2="13"></line>
-      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-    </svg>
+<div class="container fixed-bottom">
+  <div class="input-group mb-3">
+    <textarea type="text" class="form-control" [placeholder]="inputPlaceholder" [ariaLabel]="inputPlaceholder" aria-describedby="basic-addon2" [(ngModel)]="userInput"></textarea>
+    <button (click)="send()" class="btn btn-outline-secondary" type="button">
+      <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-1" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+        <line x1="22" y1="2" x2="11" y2="13"></line>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+      </svg>
   </button>
+  </div>
 </div>
   `
 })
@@ -73,7 +77,7 @@ export class HomeComponent implements OnInit {
     this.scrollToBottom();
     for await (const c of this.api.chat(this.userInput)) {
       resp.content += c;
-      if (c == '\n' || c == '\r') {
+      if (c.includes('\n') || c.includes('\r')) {
         this.scrollToBottom();
       }
     }
