@@ -1,6 +1,10 @@
-export class SessionApi {
+import { Inject, Injectable } from '@angular/core';
 
-  constructor(private baseUrl: string) {}
+@Injectable({
+  providedIn: 'root'
+})
+export class SessionApiService {
+  constructor(@Inject('BASE_URL') private baseUrl: string) {}
 
   getSessions(): Promise<SessionSimpleResponse[]> {
     return fetchWrapper<SessionSimpleResponse[]>(`${this.baseUrl}/session`);
@@ -42,7 +46,7 @@ export interface SessionResponse extends SessionSimpleResponse {
   messages: ChatMessageResponse[];
 }
 
-export interface ChatMessageResponse {
+export interface ChatMessageResponse extends ChatMessage {
   chatMessageId: number;
   message: string;
   role: PredefinedRoles;
@@ -50,12 +54,7 @@ export interface ChatMessageResponse {
 
 export type PredefinedRoles = 'user' | 'assistant' | 'system';
 
-export class ChatMessage {
+export type ChatMessage = {
   role: PredefinedRoles;
   content: string;
-
-  constructor(role: PredefinedRoles, content: string) {
-    this.role = role;
-    this.content = content;
-  }
-}
+};

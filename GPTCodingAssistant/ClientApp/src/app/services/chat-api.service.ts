@@ -1,10 +1,13 @@
+import { Inject, Injectable } from '@angular/core';
 import { HubConnection, HubConnectionBuilder, IStreamResult, IStreamSubscriber } from '@microsoft/signalr';
 
-
-export class RealApi {
+@Injectable({
+  providedIn: 'root'
+})
+export class ChatApiService {
   connection: HubConnection;
 
-  constructor(baseUrl: string) {
+  constructor(@Inject('BASE_URL') private baseUrl: string) {
     this.connection = new HubConnectionBuilder()
       .withUrl(`/chatHub`)
       .build();

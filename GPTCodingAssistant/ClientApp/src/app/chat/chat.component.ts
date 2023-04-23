@@ -1,5 +1,6 @@
 import { Component, ElementRef, HostListener, Inject, OnInit, ViewChild } from '@angular/core';
-import { ChatMessage, RealApi } from './RealApi';
+import { ChatApiService } from '../services/chat-api.service';
+import { ChatMessage, SessionApiService } from '../services/session-api.service';
 
 @Component({
   selector: 'app-home',
@@ -47,18 +48,15 @@ import { ChatMessage, RealApi } from './RealApi';
 </div>
   `
 })
-export class HomeComponent implements OnInit {
+export class ChatComponent implements OnInit {
   userInput = '';
   inputPlaceholder = '输入您的消息, 可按Enter发送, Shift+Enter换行…';
   chatHistory = <ChatMessage[]>[];
-  api: RealApi;;
 
-  constructor(@Inject('BASE_URL') baseUrl: string) {
-    console.log(baseUrl);
-    this.api = new RealApi(baseUrl);
+  constructor(private chatApi: ChatApiService, private sessionApi: SessionApiService) {
   }
   ngOnInit(): void {
-    this.api.getList().then(list => this.chatHistory = list);
+    this.sessionApi.getSessions().then(sessions => console.log(sessions));
   }
 
   @ViewChild('uiChatList', { static: true }) uiChatList!: ElementRef<HTMLUListElement>;
@@ -69,13 +67,13 @@ export class HomeComponent implements OnInit {
   }
 
   async send() {
-    this.chatHistory = [...this.chatHistory, new ChatMessage('user', this.userInput)];
-    const resp = new ChatMessage('assistant', '');
+    this.chatHistory = [...this.chatHistory, {role: 'user', content: this.userInput}];
+    const resp: ChatMessage = { role: 'assistant', content: '' };
     this.chatHistory = [...this.chatHistory, resp];
 
     this.delayCleanUserInput();
     this.scrollToBottom();
-    for await (const c of this.api.chat(this.userInput)) {
+    for await (const c of this.chatApi.append(0, this.userInput)) {
       resp.content += c;
       if (c.includes('\n') || c.includes('\r')) {
         this.scrollToBottom();
