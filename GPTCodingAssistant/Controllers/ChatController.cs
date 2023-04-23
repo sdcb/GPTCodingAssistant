@@ -16,21 +16,4 @@ namespace GPTCodingAssistant.Controllers
             return _db.Messages.Select(x => new { Role = x.Role.ToString(), Content = x.Content });
         }
     }
-
-    public class DB
-    {
-        public static DB Instance = new DB();
-
-        public List<ChatMessage> Messages { get; set; } = new List<ChatMessage>();
-
-        internal void CreateAssistantMessage(string input)
-        {
-            Messages.Add(new ChatMessage(ChatMessageRole.Assistant, input));
-        }
-
-        internal void CreateUserMessage(string input)
-        {
-            Messages.Add(new ChatMessage(ChatMessageRole.User, input));
-        }
-    }
 }
