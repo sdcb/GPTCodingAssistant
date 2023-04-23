@@ -4,16 +4,32 @@ import { ChatMessage, RealApi } from './RealApi';
 @Component({
   selector: 'app-home',
   styles: [`
-.scrollable-chat {
+.chat {
   max-height: calc(100vh - 150px); /* 你可以根据需要自定义高度 */
   overflow-y: auto;
   margin-bottom: 10px; /* 为了避免与输入区域重叠，你可以添加一些底部外边距 */
 }
+.chat .resp {
+  white-space: pre-wrap;
+}
+
+.chat li {
+  list-style: none;
+}
+
+.chat li.user {
+  text-align: right;
+  background-color: #e6f3ff;
+}
+
+.chat li.assistant {
+  background-color: #f0f0f0;
+}
 `],
   template: `
-<ul class="scrollable-chat" #uiChatList>
-  <li *ngFor="let chatItem of chatHistory">
-    <strong>{{chatItem.role}}</strong>: <pre>{{chatItem.content}}</pre>
+<ul class="chat" #uiChatList>
+  <li *ngFor="let chatItem of chatHistory" [ngClass]="chatItem.role">
+    <strong>{{chatItem.role}}</strong>: <pre class="resp">{{chatItem.content}}</pre>
   </li>
 </ul>
 <div class="container-fluid fixed-bottom input-group mb-3">
