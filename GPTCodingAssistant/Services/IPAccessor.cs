@@ -9,7 +9,7 @@
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public string GetIP()
+        public string GetClientIPAddress()
         {
             HttpContext? httpContext = _httpContextAccessor.HttpContext;
             if (httpContext == null) 

@@ -2,6 +2,7 @@
 using GPTCodingAssistant.DB;
 using GPTCodingAssistant.DB.Helpers;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace GPTCodingAssistant.Services
 {
@@ -33,7 +34,7 @@ namespace GPTCodingAssistant.Services
             }
         }
 
-        public SessionResponse GetSession(int sessionId)
+        public SessionResponse GetSessionById(int sessionId)
         {
             Session session = _db
                 .Sessions
@@ -63,7 +64,7 @@ namespace GPTCodingAssistant.Services
             _db.Sessions.Add(session);
             _db.SaveChanges();
 
-            return GetSession(session.Id);
+            return GetSessionById(session.Id);
         }
 
         public void DeleteSession(int sessionId)
@@ -79,6 +80,44 @@ namespace GPTCodingAssistant.Services
                 .Where(x => x.Ip.Ip1 == ip)
                 .Select(x => new SessionSimpleResponse(x.Id, x.Title))
                 .ToArray();
+        }
+
+        public IEnumerable<OpenAI_API.Chat.ChatMessage> GetSessionMessagesForAI(int sessionId)
+        {
+            return _db.ChatMessages
+                .Where(x => x.SessionId == sessionId)
+                .Select(ChatMessageHelper.ToAI);
+        }
+
+        public void AppendMessageToSession(int sessionId, OpenAI_API.Chat.ChatMessageRole role, string input)
+        {
+            Session session = _db.Sessions.Find(sessionId)!;
+            session.LastActiveTime = DateTime.Now;
+            session.ChatMessages.Add(new ChatMessage
+            {
+                Message = input,
+                Role = role.ToDB(),
+                CreateTime = DateTime.Now,
+            });
+            _db.SaveChanges();
+        }
+
+        public OpenAI_API.Chat.ChatMessage[] GetLatestNChatMessage(int sessionId, int beforeChatMessageId, int n)
+        {
+            return _db.ChatMessages
+                .Where(x => x.SessionId == sessionId && x.Id <= beforeChatMessageId)
+                .OrderByDescending(x => x.Id)
+                .Take(n)
+                .Select(ChatMessageHelper.ToAI)
+                .ToArray();
+        }
+
+        public void DeleteSessionMessagesAfterInclude(int sessionId, int afterIncludeChatMessageId)
+        {
+            Session session = _db.Sessions.Find(sessionId)!;
+            session.LastActiveTime = DateTime.Now;
+            session.ChatMessages = session.ChatMessages.Where(x => x.Id >= afterIncludeChatMessageId).ToList();
+            _db.SaveChanges();
         }
     }
 
