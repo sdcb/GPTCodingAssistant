@@ -29,7 +29,6 @@ namespace GPTCodingAssistant.Hubs
             await foreach (string c in chat.StreamResponseEnumerableFromChatbotAsync())
             {
                 yield return c;
-                await Task.Delay(10);
             }
             chat.Messages[^1].Role = ChatMessageRole.Assistant;
             _db.CreateAssistantMessage(chat.Messages[^1].Content);

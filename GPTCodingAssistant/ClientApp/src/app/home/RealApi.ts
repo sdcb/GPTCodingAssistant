@@ -17,8 +17,6 @@ export class RealApi {
   }
 
   async *chat(input: string): AsyncGenerator<string, any, unknown> {
-
-
     let pushValue: (value: string) => void;
     let pushError: (error: any) => void;
     let pushEnd: () => void;
