@@ -3,7 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33414.496
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GPTCodingAssistant", "GPTCodingAssistant\GPTCodingAssistant.csproj", "{7191CA82-4735-4280-9E42-7E46142200FD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GPTCodingAssistant", "GPTCodingAssistant\GPTCodingAssistant.csproj", "{7191CA82-4735-4280-9E42-7E46142200FD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{4D87E2E7-B21C-419C-A44D-B299480B5FCC}"
+	ProjectSection(SolutionItems) = preProject
+		scripts\ef-scaffolds.linq = scripts\ef-scaffolds.linq
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
