@@ -10,6 +10,7 @@ import { ChatComponent } from './chat/chat.component';
 import { CounterComponent } from './counter/counter.component';
 import { FetchDataComponent } from './fetch-data/fetch-data.component';
 import { SessionComponent } from './session/session.component';
+import { LeftNavMenuComponent } from './left-nav-menu/left-nav-menu.component';
 
 @NgModule({
   declarations: [
@@ -18,7 +19,8 @@ import { SessionComponent } from './session/session.component';
     ChatComponent,
     CounterComponent,
     FetchDataComponent,
-    SessionComponent
+    SessionComponent,
+    LeftNavMenuComponent
   ],
   imports: [
     BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),

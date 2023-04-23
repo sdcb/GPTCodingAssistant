@@ -4,10 +4,14 @@ import { Component } from '@angular/core';
   selector: 'app-root',
   template: `
 <body>
-  <app-nav-menu></app-nav-menu>
-  <main class="container">
-    <router-outlet></router-outlet>
-  </main>
+<div class="d-flex flex-row">
+    <div class="flex-shrink-0 bg-light" style="width: 280px;">
+      <app-left-nav-menu></app-left-nav-menu>
+    </div>
+    <main class="flex-grow-1 p-3">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
 </body>`
 })
 export class AppComponent {

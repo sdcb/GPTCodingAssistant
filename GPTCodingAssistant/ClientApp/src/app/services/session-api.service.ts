@@ -7,21 +7,21 @@ export class SessionApiService {
   constructor(@Inject('BASE_URL') private baseUrl: string) {}
 
   getSessions(): Promise<SessionSimpleResponse[]> {
-    return fetchWrapper<SessionSimpleResponse[]>(`${this.baseUrl}/session`);
+    return fetchWrapper<SessionSimpleResponse[]>(`${this.baseUrl}session`);
   }
 
   getSessionById(sessionId: number): Promise<SessionResponse> {
-    return fetchWrapper<SessionResponse>(`${this.baseUrl}/session/${sessionId}`);
+    return fetchWrapper<SessionResponse>(`${this.baseUrl}session/${sessionId}`);
   }
 
   createSession(): Promise<SessionResponse> {
-    return fetchWrapper<SessionResponse>(`${this.baseUrl}/session`, {
+    return fetchWrapper<SessionResponse>(`${this.baseUrl}session`, {
       method: "POST",
     });
   }
 
   async deleteSession(sessionId: number): Promise<void> {
-    await fetchWrapper<void>(`${this.baseUrl}/session/${sessionId}`, {
+    await fetchWrapper<void>(`${this.baseUrl}session/${sessionId}`, {
       method: "DELETE",
     });
   }

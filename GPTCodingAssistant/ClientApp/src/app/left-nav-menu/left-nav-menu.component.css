@@ -1,0 +1,14 @@
+ul.nav {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+
+.wrapper {
+    height: 100vh;
+}
+
+.footer {
+    margin-top: auto;
+}

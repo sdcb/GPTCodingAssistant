@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { SessionApiService } from '../services/session-api.service';
 
 @Component({
   selector: 'app-session',
@@ -10,7 +11,10 @@ import { Component } from '@angular/core';
   styles: [
   ]
 })
-export class SessionComponent {
-  
-    constructor() { }
+export class SessionComponent implements OnInit {
+  constructor(private sessionApi: SessionApiService) { }
+
+  ngOnInit(): void {
+    this.sessionApi.getSessions().then((data) => console.log(data));
+  }
 }

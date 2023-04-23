@@ -53,12 +53,16 @@ namespace GPTCodingAssistant.Services
         public SessionResponse CreateSession(string clientIp)
         {
             Ip ip = GetOrCreateIP(clientIp);
+
+            int untitledCount = _db.Sessions
+                .Count(x => x.Ip == ip && x.Title.StartsWith("无标题"));
+
             Session session = new Session
             {
                 CreateTime = DateTime.Now,
                 LastActiveTime = DateTime.Now,
                 Ip = ip,
-                Title = "无标题",
+                Title = "无标题" + (untitledCount + 1),
                 ChatMessages = new List<ChatMessage>(),
             };
             _db.Sessions.Add(session);
