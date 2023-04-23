@@ -39,17 +39,17 @@ namespace GPTCodingAssistant.Hubs
             return AppendChatNoValidation(sessionId, latest2msgs[0].Content);
         }
 
-        public IAsyncEnumerable<string> Edit(int sessionId, int chatMessageId, string input)
+        public IAsyncEnumerable<string> Edit(int sessionId, int userChatMessageId, string input)
         {
             CheckIP(sessionId);
-            AI.ChatMessage? latestMessage = _db.GetLatestNChatMessage(sessionId, chatMessageId, 1)
+            AI.ChatMessage? latestMessage = _db.GetLatestNChatMessage(sessionId, userChatMessageId, 1)
                 .FirstOrDefault();
             if (latestMessage is null || latestMessage.Role != ChatMessageRole.User)
             {
                 throw new InvalidOperationException("Chat message is not user's message");
             }
 
-            _db.DeleteSessionMessagesAfterInclude(sessionId, chatMessageId);
+            _db.DeleteSessionMessagesAfterInclude(sessionId, userChatMessageId);
             return AppendChatNoValidation(sessionId, input);
         }
 

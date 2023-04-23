@@ -1,4 +1,4 @@
-import { HubConnection, HubConnectionBuilder, IStreamSubscriber } from '@microsoft/signalr';
+import { HubConnection, HubConnectionBuilder, IStreamResult, IStreamSubscriber } from '@microsoft/signalr';
 
 
 export class RealApi {
@@ -11,69 +11,60 @@ export class RealApi {
     this.connection.start();
   }
 
-  async getList() {
-    const resp = await fetch('/chat');
-    return <ChatMessage[]>(await resp.json());
+  append(sessionId: number, input: string): AsyncGenerator<string, any, unknown> {
+    return streamResultToAsyncGenerator(this.connection.stream('Append', sessionId, input));
   }
 
-  async *chat(input: string): AsyncGenerator<string, any, unknown> {
-    let pushValue: (value: string) => void;
-    let pushError: (error: any) => void;
-    let pushEnd: () => void;
+  regenerateFor(sessionId: number, assistantMessageId: number): AsyncGenerator<string, any, unknown> {
+    return streamResultToAsyncGenerator(this.connection.stream('RegenerateFor', sessionId, assistantMessageId));
+  }
 
-    let streamPromise = new Promise<string>((resolve, reject) => {
-      pushValue = resolve;
-      pushError = reject;
-    });
-    const endPromise = new Promise<void>((resolve) => {
-      pushEnd = resolve;
-    });
-
-    const observer: IStreamSubscriber<string> = {
-      next(value: string) {
-        pushValue(value);
-      },
-      error(err: any) {
-        pushError(err);
-      },
-      complete() {
-        pushEnd();
-      },
-    };
-
-    const subscription = this.connection.stream('Chat', input).subscribe(observer);
-
-    try {
-      while (true) {
-        const nextPromise = streamPromise.then(
-          (value) => ({ value, done: false }),
-          (err) => { throw err; }
-        );
-        const { value, done } = await Promise.race([nextPromise, endPromise.then(() => ({ value: '', done: true }))]);
-
-        if (done) {
-          break;
-        }
-
-        yield value;
-
-        streamPromise = new Promise<string>((resolve, reject) => {
-          pushValue = resolve;
-          pushError = reject;
-        });
-      }
-    } finally {
-      subscription.dispose();
-    }
+  edit(sessionId: number, userChatMessageId: number, input: string): AsyncGenerator<string, any, unknown> {``
+    return streamResultToAsyncGenerator(this.connection.stream('Edit', sessionId, userChatMessageId, input));
   }
 }
 
-export class ChatMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
+async function* streamResultToAsyncGenerator<T>(streamResult: IStreamResult<T>): AsyncGenerator<T> {
+  const queue: T[] = [];
+  let resolveNext: () => void;
+  let rejectNext: (error: any) => void;
+  let isDone = false;
 
-  constructor(role: 'user' | 'assistant' | 'system', content: string) {
-    this.role = role;
-    this.content = content;
+  const subscriber: IStreamSubscriber<T> = {
+    next(value: T) {
+      queue.push(value);
+      resolveNext();
+    },
+    error(err: any) {
+      isDone = true;
+      rejectNext(err);
+    },
+    complete() {
+      isDone = true;
+      resolveNext();
+    },
+  };
+
+  streamResult.subscribe(subscriber);
+
+  try {
+    while (!isDone) {
+      await new Promise<void>((resolve, reject) => {
+        if (queue.length > 0) {
+          resolve();
+        } else {
+          resolveNext = resolve;
+          rejectNext = reject;
+        }
+      });
+
+      if (queue.length > 0) {
+        yield queue.shift()!;
+      }
+    }
+  } finally {
+    if (subscriber.closed === undefined || !subscriber.closed) {
+      subscriber.complete();
+    }
   }
 }
