@@ -13,7 +13,7 @@ import { SessionApiService, SessionSimpleResponse } from '../services/session-ap
       <li class="nav-item" *ngFor="let session of sessions; let i = index" 
           [routerLinkActive]="['link-active']"
           [routerLinkActiveOptions]="{ exact: true }">
-         <a class="d-flex flex-column flex-shrink-0 nav-link" [routerLink]="['/chat/' + i]" [ngClass]="i === activeSessionId ? 'active' : ''" aria-current="page" (click)="selectSessionId(i)">
+         <a class="d-flex flex-column flex-shrink-0 nav-link" [routerLink]="['/chat/' + session.sessionId]" [ngClass]="i === activeSessionIndex ? 'active' : ''" aria-current="page" (click)="selectSessionIndex(i)">
               <div class="d-flex w-100 justify-content-between">
                 <div class="flex-grow-1">{{session.title}}</div>
                 <div style="color: red" (click)="deleteSession(i); $event.stopPropagation()">×</div>
@@ -24,7 +24,7 @@ import { SessionApiService, SessionSimpleResponse } from '../services/session-ap
     <hr>
     <div class="footer">
         <a class="d-flex align-items-center link-dark text-decoration-none">
-            <strong>欢迎!</strong>
+            <strong>欢迎 {{ip}}</strong>
         </a>
     </div>
 </div>
@@ -33,17 +33,31 @@ import { SessionApiService, SessionSimpleResponse } from '../services/session-ap
 })
 export class LeftNavMenuComponent {
   sessions: SessionSimpleResponse[] = [];
-  activeSessionId = 0;
+  activeSessionIndex = -1;
+  ip: string = 'loading...';
 
   constructor(private sessionApi: SessionApiService) {
+    this.reload();
+    this.sessionApi.echoIp().then(ip => this.ip = ip);
+  }
+
+  selectSessionIndex(sessionIndex: number) {
+    this.activeSessionIndex = sessionIndex;
+  }
+
+  async deleteSession(sessionIndex: number) {
+    const toDelete = this.sessions[sessionIndex];
+
+    if (confirm(`确定要删除会话“${toDelete.title}”?`)) {
+      await this.sessionApi.deleteSession(toDelete.sessionId);
+      this.sessions = await this.sessionApi.getSessions();
+      if (this.activeSessionIndex === this.sessions.length) {
+        this.activeSessionIndex -= 1;
+      }
+    }
+  }
+
+  private reload() {
     this.sessionApi.getSessions().then(data => this.sessions = data);
-  }
-
-  selectSessionId(sessionId: number) {
-    this.activeSessionId = sessionId;
-  }
-
-  deleteSession(sessionId: number) {
-    alert('delete session: ' + sessionId);
   }
 }

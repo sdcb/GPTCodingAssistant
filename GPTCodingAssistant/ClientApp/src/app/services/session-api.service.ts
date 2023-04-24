@@ -6,6 +6,10 @@ import { Inject, Injectable } from '@angular/core';
 export class SessionApiService {
   constructor(@Inject('BASE_URL') private baseUrl: string) {}
 
+  echoIp(): Promise<string> {
+    return fetch(`${this.baseUrl}echo-ip`).then(x => x.text());
+  }
+
   getSessions(): Promise<SessionSimpleResponse[]> {
     return fetchWrapper<SessionSimpleResponse[]>(`${this.baseUrl}session`);
   }

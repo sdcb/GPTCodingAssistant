@@ -21,6 +21,13 @@ namespace GPTCodingAssistant.Controllers
         }
 
         [HttpGet]
+        [Route("echo-ip")]
+        public string EchoIP()
+        {
+            return _ipAccessor.GetClientIPAddress();
+        }
+
+        [HttpGet]
         [Route("session")]
         public SessionSimpleResponse[] GetSessions()
         {

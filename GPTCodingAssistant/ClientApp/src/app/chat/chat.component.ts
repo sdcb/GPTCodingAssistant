@@ -59,8 +59,10 @@ export class ChatComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.sessionApi.getSessions().then(sessions => console.log(sessions));
-    this.sessionId = parseInt(this.route.snapshot.paramMap.get('sessionId')!);
+    this.route.paramMap.subscribe(params => {
+      this.sessionId = parseInt(params.get('sessionId')!);
+      this.sessionApi.getSessionById(this.sessionId).then(data => this.chatHistory = data.messages);
+    });
   }
 
   @ViewChild('uiChatList', { static: true }) uiChatList!: ElementRef<HTMLUListElement>;
@@ -77,7 +79,7 @@ export class ChatComponent implements OnInit {
 
     this.delayCleanUserInput();
     this.scrollToBottom();
-    for await (const c of this.chatApi.append(0, this.userInput)) {
+    for await (const c of this.chatApi.append(this.sessionId, this.userInput)) {
       resp.content += c;
       if (c.includes('\n') || c.includes('\r')) {
         this.scrollToBottom();

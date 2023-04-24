@@ -42,12 +42,15 @@ namespace GPTCodingAssistant.Services
                     .Include(x => x.ChatMessages)
                 .Single(x => x.Id == sessionId);
 
-            return new SessionResponse(session.Id, session.Title, session.ChatMessages.Select(x => new ChatMessageResponse(x.Id, x.Message, ChatMessageHelper.ToRole(x.Role).ToString())).ToArray());
+            return new SessionResponse(session.Id, session.Title, session.ChatMessages.Select(x => new ChatMessageResponse(x.Id, ChatMessageHelper.ToRole(x.Role).ToString(), x.Message)).ToArray());
         }
 
         public Ip GetSessionIp(int sessionId)
         {
-            return _db.Sessions.Find(sessionId)!.Ip;
+            return _db.Sessions
+                .Where(x => x.Id == sessionId)
+                .Select(x => x.Ip)
+                .Single();
         }
 
         public SessionResponse CreateSession(string clientIp)
@@ -129,5 +132,5 @@ namespace GPTCodingAssistant.Services
 
     public record SessionResponse(int SessionId, string Title, ChatMessageResponse[] Messages) : SessionSimpleResponse(SessionId, Title);
 
-    public record ChatMessageResponse(long ChatMessageId, string Message, string Role);
+    public record ChatMessageResponse(long ChatMessageId, string Role, string Content);
 }
