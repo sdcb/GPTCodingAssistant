@@ -45,12 +45,12 @@ namespace GPTCodingAssistant.Services
             return new SessionResponse(session.Id, session.Title, session.ChatMessages.Select(x => new ChatMessageResponse(x.Id, ChatMessageHelper.ToRole(x.Role).ToString(), x.Message)).ToArray());
         }
 
-        public Ip GetSessionIp(int sessionId)
+        public Ip? GetSessionIp(int sessionId)
         {
             return _db.Sessions
                 .Where(x => x.Id == sessionId)
                 .Select(x => x.Ip)
-                .Single();
+                .FirstOrDefault();
         }
 
         public SessionResponse CreateSession(string clientIp)

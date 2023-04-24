@@ -1,5 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { SessionApiService, SessionSimpleResponse } from '../services/session-api.service';
+import { ActivatedRoute, NavigationEnd, Route, Router } from '@angular/router';
+import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-left-nav-menu',
@@ -13,10 +15,10 @@ import { SessionApiService, SessionSimpleResponse } from '../services/session-ap
       <li class="nav-item" *ngFor="let session of sessions; let i = index" 
           [routerLinkActive]="['link-active']"
           [routerLinkActiveOptions]="{ exact: true }">
-         <a class="d-flex flex-column flex-shrink-0 nav-link" [routerLink]="['/chat/' + session.sessionId]" [ngClass]="i === activeSessionIndex ? 'active' : ''" aria-current="page" (click)="selectSessionIndex(i)">
+         <a class="d-flex flex-column flex-shrink-0 nav-link" [routerLink]="['/chat/' + session.sessionId]" [ngClass]="session.sessionId === activeSessionId ? 'active' : ''" aria-current="page" (click)="selectSessionId(session.sessionId)">
               <div class="d-flex w-100 justify-content-between">
                 <div class="flex-grow-1">{{session.title}}</div>
-                <div style="color: red" (click)="deleteSession(i); $event.stopPropagation()">×</div>
+                <div style="color: red" (click)="deleteSession(session.sessionId); $event.stopPropagation()">×</div>
               </div>
           </a>
       </li>
@@ -31,33 +33,57 @@ import { SessionApiService, SessionSimpleResponse } from '../services/session-ap
   `,
   styleUrls: ['./left-nav-menu.component.css']
 })
-export class LeftNavMenuComponent {
+export class LeftNavMenuComponent implements OnInit {
   sessions: SessionSimpleResponse[] = [];
-  activeSessionIndex = -1;
+  // activeSessionIndex = -1;
+  activeSessionId: number | null = null;
   ip: string = 'loading...';
 
-  constructor(private sessionApi: SessionApiService) {
+  constructor(private sessionApi: SessionApiService, private router: Router, private activatedRoute: ActivatedRoute) {
     this.reload();
     this.sessionApi.echoIp().then(ip => this.ip = ip);
   }
 
-  selectSessionIndex(sessionIndex: number) {
-    this.activeSessionIndex = sessionIndex;
-  }
+  ngOnInit(): void {
+    this.router.events
+    .pipe(filter(event => event instanceof NavigationEnd))
+    .subscribe(() => {
+      const root = this.activatedRoute.root;
+      const chatRoute = findChatRoute(root);
 
-  async deleteSession(sessionIndex: number) {
-    const toDelete = this.sessions[sessionIndex];
-
-    if (confirm(`确定要删除会话“${toDelete.title}”?`)) {
-      await this.sessionApi.deleteSession(toDelete.sessionId);
-      this.sessions = await this.sessionApi.getSessions();
-      if (this.activeSessionIndex === this.sessions.length) {
-        this.activeSessionIndex -= 1;
+      if (chatRoute) {
+        this.activeSessionId = parseInt(chatRoute.snapshot.paramMap.get('sessionId')!);
+        console.log(this.activeSessionId);
       }
+    });
+
+    function findChatRoute(route: ActivatedRoute): ActivatedRoute | null {
+      if (route.firstChild) {
+        if (route.firstChild.routeConfig && route.firstChild.routeConfig.path === 'chat/:sessionId') {
+          return route.firstChild;
+        } else {
+          return findChatRoute(route.firstChild);
+        }
+      }
+      return null;
     }
   }
 
-  private reload() {
-    this.sessionApi.getSessions().then(data => this.sessions = data);
+  selectSessionId(sessionId: number) {
+    this.activeSessionId = sessionId;
+  }
+
+  async deleteSession(sessionId: number) {
+    const toDelete = this.sessions.filter(x => x.sessionId === sessionId)[0];
+
+    if (confirm(`确定要删除会话“${toDelete.title}”?`)) {
+      await this.sessionApi.deleteSession(toDelete.sessionId);
+      await this.reload();
+      this.activeSessionId = this.sessions.length > 0 ? this.sessions[0].sessionId : null;
+    }
+  }
+
+  private async reload() {
+    this.sessions = await this.sessionApi.getSessions();
   }
 }

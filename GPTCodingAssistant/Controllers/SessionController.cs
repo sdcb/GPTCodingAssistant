@@ -37,11 +37,13 @@ namespace GPTCodingAssistant.Controllers
 
         [HttpGet]
         [Route("session/{sessionId}")]
-        public SessionResponse GetSessionById(int sessionId)
+        public ActionResult<SessionResponse> GetSessionById(int sessionId)
         {
-            if (_db.GetSessionIp(sessionId).Ip1 != _ipAccessor.GetClientIPAddress())
+            Ip? sessionIp = _db.GetSessionIp(sessionId);
+
+            if (sessionIp == null || sessionIp.Ip1 != _ipAccessor.GetClientIPAddress())
             {
-                throw new InvalidOperationException("Session IP not match client's IP");
+                return NotFound();
             }
 
             return _db.GetSessionById(sessionId);
@@ -56,13 +58,17 @@ namespace GPTCodingAssistant.Controllers
 
         [HttpDelete]
         [Route("session/{sessionId}")]
-        public void DeleteSession(int sessionId)
+        public ActionResult DeleteSession(int sessionId)
         {
-            if (_db.GetSessionIp(sessionId).Ip1 != _ipAccessor.GetClientIPAddress())
+            Ip? sessionIp = _db.GetSessionIp(sessionId);
+
+            if (sessionIp == null || sessionIp.Ip1 != _ipAccessor.GetClientIPAddress())
             {
-                throw new InvalidOperationException("Session IP not match client's IP");
+                return NotFound();
             }
+
             _db.DeleteSession(sessionId);
+            return Ok();
         }
     }    
 }
