@@ -28,9 +28,7 @@ public partial class ChatGPTDB : DbContext
     {
         modelBuilder.Entity<ChatMessage>(entity =>
         {
-            entity.HasOne(d => d.Session).WithMany(p => p.ChatMessages)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_ChatMessage_Session");
+            entity.HasOne(d => d.Session).WithMany(p => p.ChatMessages).HasConstraintName("FK_ChatMessage_Session");
         });
 
         modelBuilder.Entity<Ip>(entity =>
