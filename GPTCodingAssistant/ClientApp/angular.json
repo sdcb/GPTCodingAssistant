@@ -132,5 +132,8 @@
       }
     }
   },
-  "defaultProject": "GPTCodingAssistant"
+  "defaultProject": "GPTCodingAssistant",
+  "cli": {
+    "analytics": false
+  }
 }
