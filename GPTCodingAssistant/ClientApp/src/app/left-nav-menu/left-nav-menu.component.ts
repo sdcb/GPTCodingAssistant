@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { SessionApiService, SessionSimpleResponse } from '../services/session-api.service';
 import { ActivatedRoute, NavigationEnd, Route, Router } from '@angular/router';
 import { filter } from 'rxjs';
@@ -15,7 +15,7 @@ import { filter } from 'rxjs';
       <li class="nav-item" *ngFor="let session of sessions; let i = index" 
           [routerLinkActive]="['link-active']"
           [routerLinkActiveOptions]="{ exact: true }">
-         <a class="d-flex flex-column flex-shrink-0 nav-link" [routerLink]="['/chat/' + session.sessionId]" [ngClass]="session.sessionId === activeSessionId ? 'active' : ''" aria-current="page" (click)="selectSessionId(session.sessionId)">
+         <a class="d-flex flex-column flex-shrink-0 nav-link" [routerLink]="['/chat/' + session.sessionId]" [ngClass]="session.sessionId === activeSessionId() ? 'active' : ''" aria-current="page" (click)="selectSessionId(session.sessionId)">
               <div class="d-flex w-100 justify-content-between">
                 <div class="flex-grow-1">{{session.title}}</div>
                 <div style="color: red" (click)="deleteSession(session.sessionId); $event.stopPropagation()">×</div>
@@ -36,7 +36,7 @@ import { filter } from 'rxjs';
 export class LeftNavMenuComponent implements OnInit {
   sessions: SessionSimpleResponse[] = [];
   // activeSessionIndex = -1;
-  activeSessionId: number | null = null;
+  activeSessionId = signal<number | undefined>(undefined);
   ip: string = 'loading...';
 
   constructor(private sessionApi: SessionApiService, private router: Router, private activatedRoute: ActivatedRoute) {
@@ -52,8 +52,8 @@ export class LeftNavMenuComponent implements OnInit {
       const chatRoute = findChatRoute(root);
 
       if (chatRoute) {
-        this.activeSessionId = parseInt(chatRoute.snapshot.paramMap.get('sessionId')!);
-        console.log(this.activeSessionId);
+        this.activeSessionId.set(parseInt(chatRoute.snapshot.paramMap.get('sessionId')!));
+        console.log(this.activeSessionId());
       }
     });
 
@@ -70,7 +70,7 @@ export class LeftNavMenuComponent implements OnInit {
   }
 
   selectSessionId(sessionId: number) {
-    this.activeSessionId = sessionId;
+    this.activeSessionId.set(sessionId);
   }
 
   async deleteSession(sessionId: number) {
@@ -79,7 +79,8 @@ export class LeftNavMenuComponent implements OnInit {
     if (confirm(`确定要删除会话“${toDelete.title}”?`)) {
       await this.sessionApi.deleteSession(toDelete.sessionId);
       await this.reload();
-      this.activeSessionId = this.sessions.length > 0 ? this.sessions[0].sessionId : null;
+      console.log(`trigger reload, set activeSessionId: ${this.sessions.length > 0 ? this.sessions[0].sessionId : undefined}`);
+      this.activeSessionId.set(this.sessions.length > 0 ? this.sessions[0].sessionId : undefined);
     }
   }
 

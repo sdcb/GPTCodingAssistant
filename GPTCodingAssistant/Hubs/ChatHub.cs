@@ -56,7 +56,7 @@ namespace GPTCodingAssistant.Hubs
         private void CheckIP(int sessionId)
         {
             Ip sessionIp = _db.GetSessionIp(sessionId);
-            if (sessionIp.Ip1 != _ipAccessor.GetClientIPAddress())
+            if (sessionIp?.Ip1 != _ipAccessor.GetClientIPAddress())
             {
                 throw new InvalidOperationException("Session IP not match client's IP");
             }

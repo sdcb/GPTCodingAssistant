@@ -5,7 +5,6 @@ import { HttpClientModule } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 
 import { AppComponent } from './app.component';
-import { NavMenuComponent } from './nav-menu/nav-menu.component';
 import { ChatComponent } from './chat/chat.component';
 import { CounterComponent } from './counter/counter.component';
 import { FetchDataComponent } from './fetch-data/fetch-data.component';
@@ -15,7 +14,6 @@ import { LeftNavMenuComponent } from './left-nav-menu/left-nav-menu.component';
 @NgModule({
   declarations: [
     AppComponent,
-    NavMenuComponent,
     ChatComponent,
     CounterComponent,
     FetchDataComponent,

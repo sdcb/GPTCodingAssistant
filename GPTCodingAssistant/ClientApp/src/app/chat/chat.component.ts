@@ -1,7 +1,7 @@
-import { Component, ElementRef, HostListener, Inject, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, Inject, OnInit, ViewChild, signal } from '@angular/core';
 import { ChatApiService } from '../services/chat-api.service';
 import { ChatMessage, SessionApiService } from '../services/session-api.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-home',
@@ -53,15 +53,23 @@ export class ChatComponent implements OnInit {
   userInput = '';
   inputPlaceholder = '输入您的消息, 可按Enter发送, Shift+Enter换行…';
   chatHistory = <ChatMessage[]>[];
-  sessionId: number = -1;
+  // sessionId: number = -1;
+  sessionId = signal<number | undefined>(undefined);
 
-  constructor(private chatApi: ChatApiService, private sessionApi: SessionApiService, private route: ActivatedRoute) {
+  constructor(private chatApi: ChatApiService, private sessionApi: SessionApiService, private route: ActivatedRoute, private router: Router) {
   }
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
-      this.sessionId = parseInt(params.get('sessionId')!);
-      this.sessionApi.getSessionById(this.sessionId).then(data => this.chatHistory = data.messages);
+    this.route.paramMap.subscribe(async params => {
+      this.sessionId.set(parseInt(params.get('sessionId')!));
+      try {
+        const session = await this.sessionApi.getSessionById(this.sessionId()!);
+        this.chatHistory = session.messages;
+      } catch(e) {
+        const session = await this.sessionApi.createSession();
+        const url = `/chat/${session.sessionId}`;
+        this.router.navigateByUrl(url);
+      }
     });
   }
 
@@ -73,15 +81,16 @@ export class ChatComponent implements OnInit {
   }
 
   async send() {
-    this.chatHistory = [...this.chatHistory, {role: 'user', content: this.userInput}];
+    this.chatHistory = [...this.chatHistory, { role: 'user', content: this.userInput }];
     const resp: ChatMessage = { role: 'assistant', content: '' };
     this.chatHistory = [...this.chatHistory, resp];
 
     this.delayCleanUserInput();
     this.scrollToBottom();
-    for await (const c of this.chatApi.append(this.sessionId, this.userInput)) {
+    for await (const c of this.chatApi.append(this.sessionId()!, this.userInput)) {
       resp.content += c;
       if (c.includes('\n') || c.includes('\r')) {
+        await new Promise(resolve => setTimeout(resolve, 100));
         this.scrollToBottom();
       }
     }
